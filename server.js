@@ -1,9 +1,10 @@
-// server.js
 const net = require('net');
 const { ChatRoomProtocol, MessageType } = require('./protocol');
 
 const server = net.createServer((socket) => {
   console.log('Client connected');
+
+  socket.write(ChatRoomProtocol.createChatMessage('General', 'Server', 'Welcome to the chat room!'));
 
   socket.on('data', (data) => {
     const { type, roomID, data: message } = ChatRoomProtocol.parseMessage(data.toString());
@@ -11,22 +12,30 @@ const server = net.createServer((socket) => {
     switch (type) {
       case MessageType.JOIN:
         console.log(`User joined room ${roomID}: ${message}`);
-        // Handle user joining logic
+        // Broadcast join message to all clients
+        // ...
+
         break;
 
       case MessageType.CHAT:
         console.log(`Chat message in room ${roomID} from ${message}`);
-        // Handle chat message logic
+        // Broadcast chat message to all clients
+        // ...
+
         break;
 
       case MessageType.CMD:
         console.log(`Command received in room ${roomID}: ${message}`);
         // Handle command logic
+        // ...
+
         break;
 
       case MessageType.LEAVE:
         console.log(`User left room ${roomID}: ${message}`);
-        // Handle user leaving logic
+        // Broadcast leave message to all clients
+        // ...
+
         break;
 
       default:
@@ -37,38 +46,13 @@ const server = net.createServer((socket) => {
   socket.on('end', () => {
     console.log('Client disconnected');
   });
-
-  // Example: Sending a welcome message to the client
-  const welcomeMessage = ChatRoomProtocol.createChatMessage('General', 'Server', 'Welcome to the chat room!');
-  socket.write(welcomeMessage);
 });
 
 server.on('error', (err) => {
   throw err;
 });
 
-server.listen(8124, () => {
-  console.log('Server listening on port 8124');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
-
-// // server.js
-// const net = require('net');
-
-// const server = net.createServer((socket) => {
-//     console.log('Client connected');
-
-//     socket.on('end', () => {
-//         console.log('Client disconnected');
-//     });
-
-//     socket.write('Hello from server!\r\n');
-//     socket.pipe(socket);
-// });
-
-// server.on('error', (err) => {
-//     throw err;
-// });
-
-// server.listen(8124, () => {
-//     console.log('Server listening on port 8124');
-// });
