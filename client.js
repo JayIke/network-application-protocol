@@ -10,7 +10,8 @@ const client = new net.Socket();
 
 
 rl.question('Enter your username: ', (username) => {
-  client.connect(3000, 'localhost', () => {
+  client.username = username;
+  client.connect(6, '172.17.62', () => {
     console.log('Connected to server!');
     const joinMessage = ChatRoomProtocol.createJoinMessage('General', username);
     client.write(joinMessage);
@@ -25,7 +26,7 @@ client.on('data', (data) => {
 
   switch (type) {
     case 'CHAT':
-      console.log(`[${roomID}] ${message}`);
+      console.log(message.sender + message.message);
       break;
 
     case 'NOTIFICATION':
@@ -52,6 +53,8 @@ client.on('error', (err) => {
 });
 
 rl.on('line', (input) => {
+
   const chatMessage = ChatRoomProtocol.createChatMessage('General', client.username, input);
+
   client.write(chatMessage);
 });

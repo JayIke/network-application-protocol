@@ -6,6 +6,7 @@ const ChatRoomProtocol = {
       NOTIFICATION: 'NOTIFICATION',
       ERROR: 'ERROR',
       CMD: 'CMD',
+      OKAY: 'OKAY',
       LEAVE: 'LEAVE',
     },
   

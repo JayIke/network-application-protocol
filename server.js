@@ -1,10 +1,10 @@
 const net = require('net');
 const { ChatRoomProtocol, MessageType } = require('./protocol');
 
-
 const server = net.createServer((socket) => {
   
   socket.on('data', (data) => {
+    
     const { type, roomID, data: message } = ChatRoomProtocol.parseMessage(data.toString());
 
     switch (type) {
@@ -12,7 +12,8 @@ const server = net.createServer((socket) => {
         socket.username = message;
         socket.room = roomID;
         console.log('Client connected');
-        socket.write(ChatRoomProtocol.createChatMessage('General', 'Server', `${message} joined chat.`));
+        console.log()
+        socket.write(ChatRoomProtocol.createChatMessage('General', 'Server:', message));
         console.log(`User joined room ${roomID}: ${message}`);
         // Broadcast join message to all clients
         // ...
@@ -21,14 +22,21 @@ const server = net.createServer((socket) => {
         break;
 
       case 'CHAT':
-        console.log(`Chat message in room ${roomID} from ${message}`);
+        console.log(message);
         
-        socket.write(ChatRoomProtocol.createChatMessage('General', data.at(2), message[1]));
+        socket.write(ChatRoomProtocol.createChatMessage('General', socket.username, message));
         // Broadcast chat message to all clients
         // ...
 
         break;
 
+      case 'NOTIFICATION':
+        console.log(`Chat message in room ${roomID} from ${message}`);
+        //socket.write(ChatRoomProtocol.createChatMessage('General', message[0], message[1]));
+        // Broadcast chat message to all clients
+        // ...
+
+        break;
       case 'CMD':
         console.log(`Command received in room ${roomID}: ${message}`);
         // Handle command logic
@@ -57,7 +65,8 @@ server.on('error', (err) => {
   throw err;
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+// const PORT = server.address() || 3000;
+// server.listen()
+server.listen(6, () => {
+  console.log(`Server listening on port ${6}`);
 });
