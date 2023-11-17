@@ -6,30 +6,33 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
-
 const client = new net.Socket();
 
-client.connect(3000, 'localhost', () => {
-  console.log('Connected to server!');
-  rl.question('Enter your username: ', (username) => {
+
+rl.question('Enter your username: ', (username) => {
+  client.connect(3000, 'localhost', () => {
+    console.log('Connected to server!');
     const joinMessage = ChatRoomProtocol.createJoinMessage('General', username);
     client.write(joinMessage);
+    console.log('Join message sent.');
+  
   });
+  
 });
 
 client.on('data', (data) => {
   const { type, roomID, data: message } = ChatRoomProtocol.parseMessage(data.toString());
 
   switch (type) {
-    case ChatRoomProtocol.MessageType.CHAT:
+    case 'CHAT':
       console.log(`[${roomID}] ${message}`);
       break;
 
-    case ChatRoomProtocol.MessageType.NOTIFICATION:
+    case 'NOTIFICATION':
       console.log(`[${roomID}] Notification: ${message}`);
       break;
 
-    case ChatRoomProtocol.MessageType.ERROR:
+    case 'ERROR':
       console.error(`Error: ${message}`);
       break;
 
@@ -49,6 +52,6 @@ client.on('error', (err) => {
 });
 
 rl.on('line', (input) => {
-  const chatMessage = ChatRoomProtocol.createChatMessage('General', 'Me', input);
+  const chatMessage = ChatRoomProtocol.createChatMessage('General', client.username, input);
   client.write(chatMessage);
 });
