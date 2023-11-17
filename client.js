@@ -11,7 +11,7 @@ const client = new net.Socket();
 
 rl.question('Enter your username: ', (username) => {
   client.username = username;
-  client.connect(90, '172.17.62', () => {
+  client.connect(90, '172.17.67.6', () => {
     console.log('Connected to server!');
     const joinMessage = ChatRoomProtocol.createJoinMessage('General', username);
     client.write(joinMessage);
