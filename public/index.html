@@ -1,0 +1,65 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room</title>
+  <style>
+    #chat {
+      height: 300px;
+      overflow: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    #input {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <div id="input">
+    <input type="text" id="message" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:3000');
+
+    socket.addEventListener('open', (event) => {
+      const username = prompt('Enter your username:');
+      const joinMessage = `JOIN General ${username}`;
+      socket.send(joinMessage);
+    });
+
+    socket.addEventListener('message', (event) => {
+      handleMessage(event.data);
+    });
+
+    socket.addEventListener('close', (event) => {
+      console.log('Disconnected from server');
+    });
+
+    socket.addEventListener('error', (error) => {
+      console.error(error);
+    });
+
+    function sendMessage() {
+      const messageInput = document.getElementById('message');
+      const message = messageInput.value;
+      const chatMessage = `CHAT General Me ${message}`;
+      socket.send(chatMessage);
+      messageInput.value = '';
+    }
+
+    function handleMessage(data) {
+      const messageDiv = document.getElementById('chat');
+      const message = document.createElement('div');
+      message.textContent = data;
+      messageDiv.appendChild(message);
+    }
+  </script>
+</body>
+</html>
