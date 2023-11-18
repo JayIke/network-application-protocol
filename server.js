@@ -1,102 +1,100 @@
-const net = require('net');
-const { ChatRoomProtocol, MessageType } = require('./protocol');
-const os = require('os');
-//const http = require('http');
-//const express = require('express');
+const net = require("net");
+const Protocol = require("./protocol");
+const protocol = new Protocol();
 
-//const app = express();
-//const webServer = http.createServer(app);
 const clients = new Set(); // Set to store connected TCP sockets
 function broadcastToAllClients(message) {
   // Iterate through all connected clients and send the message
-    for (const c of clients) {
-      c.write(message);
+  for (const c of clients) {
+    c.write(message);
+  }
+}
+
+function isUsernameTaken(username) {
+  for (const client of clients) {
+    if (client.username === username) {
+      return true;
     }
   }
+  return false;
+}
 
 const server = net.createServer((socket) => {
-  
-  socket.on('data', (data) => {
-    let alt = data;
-    console.log(data.toString());
-    
-    const { type, roomID, data: message } = ChatRoomProtocol.parseMessage(data.toString());
+  socket.on("data", (data) => {
+    const packet = protocol.parseMessage(data.toString());
 
-    switch (type) {
-      case 'JOIN':
-      socket.username = message;
-      socket.room = roomID;
-      clients.add(socket);
-      broadcastToAllClients('JOIN ' + socket.username);
-        console.log(`@${socket.username} connected.`);
-        socket.write(ChatRoomProtocol.createChatMessage('General', 'Server:', message));
-        console.log('Clients set size: ' + clients.size)
-        //console.log(`User joined room ${roomID}: ${message}`);
-        // Broadcast join message to all clients
-        // ...
-
-
+    switch (packet.messageType) {
+      case "JOIN":
+        if (packet.username === null) {
+          console.log("1");
+          socket.write(protocol.createErrorMessage("Invalid username"));
+        } else if (isUsernameTaken(packet.username)) {
+          console.log("2");
+          socket.write(protocol.createErrorMessage("Username taken"));
+        } else {
+          broadcastToAllClients(
+            protocol.createNotificationMessage(
+              packet.username,
+              "has joined the chat"
+            )
+          );
+          socket.username = packet.username;
+          socket.write(protocol.createOkayMessage(packet.username));
+          clients.add(socket);
+          console.log(`@${socket.username} connected.`);
+        }
         break;
 
-      case 'CHAT':
-        console.log('Connection count: ' + clients.size);
-        console.log(message);
-        
-        //const broadcast =  ChatRoomProtocol.createChatMessage('General', message);
-        //socket.write(alt.toString());
-        broadcastToAllClients(alt.toString());
-        // Broadcast chat message to all clients
-        // ...
-
+      case "CHAT":
+        if (packet.username === null || packet.username !== socket.username) {
+          console.log("3");
+          socket.write(protocol.createErrorMessage("Invalid username"));
+        } else {
+          broadcastToAllClients(
+            protocol.createNotificationMessage(packet.username, packet.message)
+          );
+        }
         break;
 
-      case 'NOTIFICATION':
-        console.log(`Chat message in room ${roomID} from ${message}`);
-        //socket.write(ChatRoomProtocol.createChatMessage('General', message[0], message[1]));
-        // Broadcast chat message to all clients
-        // ...
-
-        break;
-      case 'CMD':
-        console.log(`Command received in room ${roomID}: ${message}`);
-        // Handle command logic
-        // ...
-
-        break;
-
-      case 'LEAVE':
-        console.log(`User left room ${roomID}: ${message}`);
-        // Broadcast leave message to all clients
-        // ...
-
+      case "LEAV":
+        if (packet.username === null || packet.username !== socket.username) {
+          console.log("4");
+          socket.write(protocol.createErrorMessage("Invalid username"));
+        }
+        broadcastToAllClients(
+          protocol.createNotificationMessage(
+            packet.username,
+            "has left the chat"
+          )
+        );
+        clients.delete(socket);
         break;
 
       default:
-        console.log(`Unknown message type: ${type}`);
+        socket.write(
+          protocol.createErrorMessage("Unknown message type")
+        );
+        console.log(`Unknown message type: ${packet.messageType}`);
     }
   });
- 
-  server.on('connection', (socket) => {
+
+  server.on("connection", (socket) => {
     //clients.add(socket);
-    console.log('Client connected to TCP server');
+    console.log("Client connected to TCP server");
   });
 
-  socket.on('end', () => {
-    clients.delete(socket);
-    console.log('Client disconnected');
+  socket.on("end", () => {
+    // clients.delete(socket);
+    console.log("Client disconnected");
   });
 });
 
-server.on('error', (err) => {
+server.on("error", (err) => {
   throw err;
 });
 
 const PORT = 90;
-  // server.listen()
-  server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-  });
-
-
-
-
+// server.listen()
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
