@@ -9,7 +9,7 @@ const ChatRoomProtocol = {
       OKAY: 'OKAY',
       LEAVE: 'LEAVE',
     },
-  
+  	// %4A%4F%49%4E%20%47%20%47 - 'JOIN G G' ASCII encoding from UTF-8 (HTML5)
     createJoinMessage(roomID, username) {
       return `${this.MessageType.JOIN} ${roomID} ${username}`;
     },
