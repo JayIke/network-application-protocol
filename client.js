@@ -2,6 +2,7 @@ const net = require('net');
 const readline = require('readline');
 const { ChatRoomProtocol } = require('./protocol');
 const os = require('os');
+
 // Function to get the local IP address
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces();

@@ -25,24 +25,25 @@ class ChatroomGUI:
 
     def create_widgets(self):
         self.chat_area = scrolledtext.ScrolledText(self.master, state='disabled', height=20, width=40)
-        self.chat_area.grid(row=0, column=0, padx=10, pady=10, columnspan=2)
+        self.chat_area.grid(row=0, column=0, padx=10, pady=10, sticky=tk.NSEW)
 
         self.user_list = Listbox(self.master, height=20, width=20)
-        self.user_list.grid(row=0, column=1, padx=10, pady=10, rowspan=20)
+        self.user_list.grid(row=0, column=1, padx=10, pady=10, rowspan=20, sticky=tk.NS)
 
         self.message_entry = tk.Entry(self.master, width=40)
-        self.message_entry.grid(row=1, column=0, padx=10, pady=10)
+        self.message_entry.grid(row=1, column=0, padx=10, pady=10, sticky=tk.EW)
 
         send_button = tk.Button(self.master, text="Send", command=self.send_message)
-        send_button.grid(row=1, column=1, padx=10, pady=10)
+        send_button.grid(row=1, column=1, padx=10, pady=10, sticky=tk.NS)
 
-       
+       # Bind the Enter key to the send_message function
+        self.master.bind('<Return>', lambda event: self.send_message())
 
         # Column and row weights to make them expand with resizing
         self.master.columnconfigure(0, weight=1)
         self.master.columnconfigure(1, weight=1)
         self.master.rowconfigure(0, weight=1)
-        self.master.rowconfigure(1, weight=1)
+        self.master.rowconfigure(1, weight=0)
 
     def send_message(self):
         message = self.message_entry.get()
