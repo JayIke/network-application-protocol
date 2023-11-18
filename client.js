@@ -31,7 +31,7 @@ client.ipAddress = ipAddress;
 client.port = port;
 client.serverAddress = serverAddress;
 
-rl.question('Enter your username: ', (username) => {
+rl.question('Enter the JOIN command', (username) => {
   client.username = username;
   client.connect(port, ipAddress, () => {
    
@@ -46,18 +46,18 @@ rl.question('Enter your username: ', (username) => {
 
 client.on('data', (data) => {
   //console.log(data.toString());
-  const { type, roomID, data: message } = ChatRoomProtocol.parseMessage(data.toString());
+  const { type, sender, message } = ChatRoomProtocol.parseMessage(data.toString());
 
   switch (type) {
     case 'CHAT':
-      console.log(message);
+      console.log(`[${type}] ${sender}: ${message}`);
       break;
 
-    case 'NOTIFICATION':
-      console.log(`[${roomID}] Notification: ${message}`);
+    case 'NOTI':
+      console.log(`[${type}] Notification: ${sender} ${message}`);
       break;
 
-    case 'ERROR':
+    case 'EERR':
       console.error(`Error: ${message}`);
       break;
 
@@ -72,7 +72,10 @@ client.on('end', () => {
 });
 
 client.on('error', (err) => {
+  const errorMessage = ChatRoomProtocol.createJoinMessage('EERR', client.username, err);
   console.error(err);
+  client.write(errorMessage);
+  const leavMessage = ChatRoomProtocol.createLeaveMessage('LEAV', client.username);
   rl.close();
 });
 

@@ -2,67 +2,81 @@
 const ChatRoomProtocol = {
     MessageType: {
       JOIN: 'JOIN',
-      CHAT: 'CHAT',
-      NOTIFICATION: 'NOTIFICATION',
-      ERROR: 'ERROR',
-      CMD: 'CMD',
       OKAY: 'OKAY',
-      LEAVE: 'LEAVE',
+      NOTI: 'NOTI',
+      LEAV: 'LEAV',
+      CHAT: 'CHAT',
+      EERR: 'EERR',
     },
-  	// %4A%4F%49%4E%20%47%20%47 - 'JOIN G G' ASCII encoding from UTF-8 (HTML5)
-    createJoinMessage(roomID, username) {
-      return `${this.MessageType.JOIN} ${roomID} ${username}`;
-    },
-  
-    createChatMessage(roomID, sender, message) {
-      return `${this.MessageType.CHAT} ${roomID} ${sender} ${message}`;
-    },
-  
-    createNotificationMessage(roomID, message) {
-      return `${this.MessageType.NOTIFICATION} ${roomID} ${message}`;
+    
+    createJoinRequest(username) {
+      return `${this.MessageType.JOIN} ${username}`;
     },
   
-    createErrorMessage(message) {
-      return `${this.MessageType.ERROR} ${message}`;
+    createChatMessage(sender, message) {
+      return `${this.MessageType.CHAT} ${sender} ${message}`;
+    },
+
+    createOkayMessage(message) {
+      return `${this.MessageType.OKAY} ${message}`;
     },
   
-    createLeaveMessage(roomID, username) {
-      return `${this.MessageType.LEAVE} ${roomID} ${username}`;
+    createNotificationMessage(sender, message) {
+      return `${this.MessageType.NOTI} ${sender} ${message}`;
+    },
+  
+    createErrorMessage(sender, message) {
+      return `${this.MessageType.EERR} ${sender} ${message}`;
+    },
+  
+    createLeaveMessage(sender, username) {
+      return `${this.MessageType.LEAV} ${sender} ${username}`;
     },
   
     parseMessage(data) {
-      const parts = data.split(' ');
-      const type = parts[0];
-      const roomID = parts[1];
-      const rawData = parts.slice(2).join(' ');
+      const type = data.substr(0,4); // message type
+      
+      const id = data.substr(' ', 5);
+      const last = id.lastIndexOf(id);
+      const rawData = data.substr(last);
   
       let messageType;
+      let user;
+      //let length = type.length + user.length + rawData.length;
       let parsedData;
-  
       switch (type) {
         case this.MessageType.JOIN:
           messageType = this.MessageType.JOIN;
+          user = id;
+          break;
+
+        case this.MessageType.OKAY:
+          messageType = this.MessageType.OKAY;
+          //user = id;
           parsedData = rawData;
           break;
   
         case this.MessageType.CHAT:
           messageType = this.MessageType.CHAT;
-          const [sender, chatMessage] = rawData.split(' ');
-          parsedData = { sender, message: chatMessage };
-          break;
-  
-        case this.MessageType.NOTIFICATION:
-          messageType = this.MessageType.NOTIFICATION;
+          user = id;
           parsedData = rawData;
           break;
   
-        case this.MessageType.ERROR:
-          messageType = this.MessageType.ERROR;
+        case this.MessageType.NOTI:
+          messageType = this.MessageType.NOTI;
+          user = id;
           parsedData = rawData;
           break;
   
-        case this.MessageType.LEAVE:
-          messageType = this.MessageType.LEAVE;
+        case this.MessageType.EERR:
+          messageType = this.MessageType.EERR;
+          user = id;
+          parsedData = rawData;
+          break;
+  
+        case this.MessageType.LEAV:
+          messageType = this.MessageType.LEAV;
+          user = id;
           parsedData = rawData;
           break;
   
@@ -74,8 +88,8 @@ const ChatRoomProtocol = {
   
       return {
         type: messageType,
-        roomID,
-        data: parsedData,
+        sender: user,
+        message: parsedData,
       };
     },
   };

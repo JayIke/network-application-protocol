@@ -3,6 +3,10 @@ from tkinter import scrolledtext
 from tkinter import Listbox
 from threading import Thread
 import socket
+import os
+
+
+
 
 class ChatroomGUI:
     def __init__(self, master, host, port):
@@ -82,7 +86,7 @@ class ChatroomGUI:
         self.chat_area.see(tk.END)
 
     # Update tags
-        self.chat_area.tag_configure('users_tag', foreground='blue', font=('Helvetica', 10, 'bold'))
+        self.chat_area.tag_configure('users_tag', foreground='blue', background='red', font=('Helvetica', 10, 'bold'))
         self.chat_area.tag_configure('chat_tag', foreground='green', font=('Helvetica', 10, 'bold'))
 
     def update_user_list(self, users):
@@ -100,10 +104,11 @@ class ChatroomGUI:
 
 if __name__ == "__main__":
     # Replace 'your_server_ip' and 'your_server_port' with your actual server IP and port
-    server_ip = '192.168.0.253'
+    hostname = socket.gethostname()
+    server_ip = socket.gethostbyname(hostname)
     server_port = 90
     root = tk.Tk()
     chatroom_gui = ChatroomGUI(root, server_ip, server_port)
     root.protocol("WM_DELETE_WINDOW", chatroom_gui.close_window)
-   
+
     root.mainloop()
