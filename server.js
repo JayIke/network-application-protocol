@@ -25,11 +25,12 @@ const server = net.createServer((socket) => {
 
     switch (packet.messageType) {
       case "JOIN":
-        if (packet.username === null) {
-          console.log("1");
+        if (socket.username !== undefined) {
+          socket.write(protocol.createErrorMessage("Already joined"));
+        }
+        else if (packet.username === null) {
           socket.write(protocol.createErrorMessage("Invalid username"));
         } else if (isUsernameTaken(packet.username)) {
-          console.log("2");
           socket.write(protocol.createErrorMessage("Username taken"));
         } else {
           broadcastToAllClients(
@@ -47,7 +48,6 @@ const server = net.createServer((socket) => {
 
       case "CHAT":
         if (packet.username === null || packet.username !== socket.username) {
-          console.log("3");
           socket.write(protocol.createErrorMessage("Invalid username"));
         } else {
           broadcastToAllClients(
@@ -58,22 +58,20 @@ const server = net.createServer((socket) => {
 
       case "LEAV":
         if (packet.username === null || packet.username !== socket.username) {
-          console.log("4");
           socket.write(protocol.createErrorMessage("Invalid username"));
+        } else {
+          broadcastToAllClients(
+            protocol.createNotificationMessage(
+              packet.username,
+              "has left the chat"
+            )
+          );
+          clients.delete(socket);
         }
-        broadcastToAllClients(
-          protocol.createNotificationMessage(
-            packet.username,
-            "has left the chat"
-          )
-        );
-        clients.delete(socket);
         break;
 
       default:
-        socket.write(
-          protocol.createErrorMessage("Unknown message type")
-        );
+        socket.write(protocol.createErrorMessage("Unknown message type"));
         console.log(`Unknown message type: ${packet.messageType}`);
     }
   });
