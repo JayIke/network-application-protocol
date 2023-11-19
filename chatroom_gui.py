@@ -59,8 +59,9 @@ class ChatroomGUI:
         while True:
             try:
                 message = self.client_socket.recv(1024).decode('utf-8')
-                if message.startswith("JOIN"):
-                    self.update_user_list('@'+message[5:])
+                if message.startswith("NOTI"):
+                    name = message.split(' ')
+                    self.update_user_list('@'+name[1])
                     self.update_chat_area(message)
                 else:
                     self.update_chat_area(message)
@@ -71,7 +72,7 @@ class ChatroomGUI:
         self.chat_area.configure(state='normal')
 
     # Assuming "/users" should be highlighted
-        if message.startswith("JOIN"):
+        if message.startswith("NOTI"):
             self.chat_area.insert(tk.END, message[:5], 'users_tag')
             self.chat_area.insert(tk.END, message[5:] + '\n')
         elif message.startswith("CHAT"):

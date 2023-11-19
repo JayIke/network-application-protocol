@@ -1,66 +1,62 @@
 const net = require('net');
 const { ChatRoomProtocol, MessageType } = require('./protocol');
 const os = require('os');
-//const http = require('http');
-//const express = require('express');
 
-//const app = express();
-//const webServer = http.createServer(app);
 const clients = new Set(); // Set to store connected TCP sockets
-function broadcastToAllClients(message) {
+const id_list = new Set();
+function broadcastToAllClients(message){
   // Iterate through all connected clients and send the message
     for (const c of clients) {
       c.write(message);
-    }
   }
+}
+const Client={
+  ID: {
+  username: new Set(),
+  }
+}
 
 const server = net.createServer((socket) => {
   
   socket.on('data', (data) => {
-    let alt = data;
-    //console.log(data.toString());
     
     const { type, sender, message } = ChatRoomProtocol.parseMessage(data.toString());
 
     switch (type) {
       case 'JOIN':
         
-
-        //socket.room = roomID;
-        clients.add(socket);
-        console.log(socket.localAddress);
-        broadcastToAllClients(alt.toString());
-        socket.username = sender;
+       
+        //clients.add(socket);
+        if (id_list.has(sender)){
+          socket.write('Username exists, try different one');
+          break;
+        } 
+        Client.ID.username.add(sender);
+        //socket.username = sender;
+        console.log(sender + 'from join');
+        clients.add(socket)
+        id_list.add(sender);
+        console.log('Client IP: ' + socket.localAddress);
+       
         const okay = ChatRoomProtocol.createOkayMessage(sender);
-        
         socket.write(okay);
-        
-        console.log(`@${socket.username} connected.`);
-        //socket.write(ChatRoomProtocol.createOkayMessage(`Welcome to the chat, ${socket.username}`));
         console.log('Clients set size: ' + clients.size);
-        //console.log(`User joined room ${roomID}: ${message}`);
-        // Broadcast join message to all clients
-        // ...
+
+        const noti = ChatRoomProtocol.createNotificationMessage(sender, 'entered chat!');
+        
+        broadcastToAllClients(noti);
         break;
 
       case 'CHAT':
         console.log('Connection count: ' + clients.size);
-        console.log(message);
+        if (id_list.has(this.sender)){
+          
+          broadcastToAllClients(data.toString());
+        } else {
+          const invalidUsername = ChatRoomProtocol.createErrorMessage('Server', ChatRoomProtocol.ErrorMessage.NOID);
+          socket.write(invalidUsername);
+        }
         
-        //const broadcast =  ChatRoomProtocol.createChatMessage('General', message);
-        //socket.write(alt.toString());
-        socket.write(ChatRoomProtocol.createOkayMessage(alt.toString()));
-        broadcastToAllClients(alt.toString());
-        // Broadcast chat message to all clients
-        // ...
-        break;
-      case 'OKAY':
-        //console.log(`${ type, sender, message }`);
-        
-        //socket.write(ChatRoomProtocol.createChatMessage('General', message[0], message[1]));
-        // Broadcast chat message to all clients
-        // ...
-  
         break;
       
       case 'EERR':
@@ -70,40 +66,59 @@ const server = net.createServer((socket) => {
 
         break;
 
-      case 'LEAVE':
-        console.log(`${type}: ${message}`);
-        // Broadcast leave message to all clients
-        // ...
-
+      case 'LEAV':
+        console.log(`${type}: ${sender}`);
+        if(socket.closed){
+        const noti = ChatRoomProtocol.createNotificationMessage(sender, 'LEFT!');
+        broadcastToAllClients(noti);
+        } else {
+          socket.destroy();
+        const noti = ChatRoomProtocol.createNotificationMessage(sender, 'LEFT!');
+        broadcastToAllClients(noti);
+        }
+        
+    
         break;
 
       default:
         console.log(`Unknown message type: ${type}`);
     }
   });
- 
-  server.on('connection', (socket) => {
-    //clients.add(socket);
-    console.log('Client connected to TCP server');
+  socket.on('connect', (socket) => {
+    const msg = socket.username;
+    console.log(msg + ' connected');
   });
 
   socket.on('end', () => {
-    clients.delete(socket);
-    socket.destroy;
+    //clients.delete(socket);
+    //id_list.delete(socket.username);
+    //socket.destroy;
     console.log('Client disconnected');
   });
 });
+ 
+  
+  
+
 
 server.on('error', (err) => {
-  const eerr = ChatRoomProtocol.createErrorMessage('EERR', 'Server', err)
+  const eerr = ChatRoomProtocol.createErrorMessage('Server', err)
   socket.write(eerr);
   throw err;
 });
-
+server.on('connect', (socket) =>{
+  console.log('client trying to connect');
+});
+server.on('connection', (socket) => {
+  //clients.add(socket);
+  id_list.add(socket.username);
+  console.log(socket.username);
+  console.log('Client connected to TCP server');
+});
 const PORT = 90;
   // server.listen()
   server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT} `, server.address());
+    console.log(`Server listening on port ${PORT}`, server.address());
   });
 
 

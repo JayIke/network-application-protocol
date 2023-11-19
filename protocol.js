@@ -8,9 +8,12 @@ const ChatRoomProtocol = {
       CHAT: 'CHAT',
       EERR: 'EERR',
     },
+    ErrorMessage: {
+      NOID: 'Invalid username, please send JOIN <username>',
+    },
     
-    createJoinRequest(username) {
-      return `${this.MessageType.JOIN} ${username}`;
+    createJoinRequest(sender) {
+      return `${this.MessageType.JOIN} ${sender}`;
     },
   
     createChatMessage(sender, message) {
@@ -29,55 +32,58 @@ const ChatRoomProtocol = {
       return `${this.MessageType.EERR} ${sender} ${message}`;
     },
   
-    createLeaveMessage(sender, username) {
-      return `${this.MessageType.LEAV} ${sender} ${username}`;
+    createLeaveMessage(sender) {
+      return `${this.MessageType.LEAV} ${sender}`;
     },
   
     parseMessage(data) {
-      const type = data.substr(0,4); // message type
+      const type = data.substring(0,4); // message type
+      const temp = data.substring(5);
+      const userIndex = temp.indexOf(' ')
+      const id = temp.substring(5,userIndex);
+      const rawData = data.substring(userIndex+1).trim();
       
-      const id = data.substr(' ', 5);
-      const last = id.lastIndexOf(id);
-      const rawData = data.substr(last);
   
       let messageType;
       let user;
       //let length = type.length + user.length + rawData.length;
       let parsedData;
       switch (type) {
-        case this.MessageType.JOIN:
+        case 'JOIN':
           messageType = this.MessageType.JOIN;
-          user = id;
+          user = data.substring(5).trim();
+          
+          
           break;
 
-        case this.MessageType.OKAY:
+        case 'OKAY':
           messageType = this.MessageType.OKAY;
-          //user = id;
+          user = id;
           parsedData = rawData;
           break;
   
-        case this.MessageType.CHAT:
+        case 'CHAT':
           messageType = this.MessageType.CHAT;
           user = id;
           parsedData = rawData;
           break;
   
-        case this.MessageType.NOTI:
+        case 'NOTI':
           messageType = this.MessageType.NOTI;
           user = id;
           parsedData = rawData;
           break;
   
-        case this.MessageType.EERR:
+        case 'EERR':
           messageType = this.MessageType.EERR;
+          
           user = id;
           parsedData = rawData;
           break;
   
-        case this.MessageType.LEAV:
+        case 'LEAV':
           messageType = this.MessageType.LEAV;
-          user = id;
-          parsedData = rawData;
+          user = data.substring(5).trim();
           break;
   
         default:

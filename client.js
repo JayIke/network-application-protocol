@@ -31,12 +31,12 @@ client.ipAddress = ipAddress;
 client.port = port;
 client.serverAddress = serverAddress;
 
-rl.question('Enter the JOIN command', (username) => {
+rl.question('Enter username: ', (username) => {
   client.username = username;
   client.connect(port, ipAddress, () => {
    
     console.log('Connected to server on ' + serverAddress);
-    const joinMessage = ChatRoomProtocol.createJoinMessage('General', username);
+    const joinMessage = ChatRoomProtocol.createJoinRequest(username);
     client.write(joinMessage);
     console.log('Join message sent.');
   
@@ -49,12 +49,15 @@ client.on('data', (data) => {
   const { type, sender, message } = ChatRoomProtocol.parseMessage(data.toString());
 
   switch (type) {
+    case 'OKAY':
+      console.log(data.toString());
+
     case 'CHAT':
-      console.log(`[${type}] ${sender}: ${message}`);
+      console.log(data.toString());
       break;
 
     case 'NOTI':
-      console.log(`[${type}] Notification: ${sender} ${message}`);
+      console.log(data.toString());
       break;
 
     case 'EERR':
@@ -72,17 +75,20 @@ client.on('end', () => {
 });
 
 client.on('error', (err) => {
-  const errorMessage = ChatRoomProtocol.createJoinMessage('EERR', client.username, err);
+  const errorMessage = ChatRoomProtocol.createErrorMessage(client.username, err);
   console.error(err);
   client.write(errorMessage);
-  const leavMessage = ChatRoomProtocol.createLeaveMessage('LEAV', client.username);
+  
   rl.close();
 });
 
 rl.on('line', (input) => {
-
-  const chatMessage = ChatRoomProtocol.createChatMessage('General', client.username, input);
-
+  if (input == 'LEAV'){
+    const leavMessage = ChatRoomProtocol.createLeaveMessage(client.username);
+  client.write(leavMessage);
+  }
+  const chatMessage = ChatRoomProtocol.createChatMessage(client.username, input);
   client.write(chatMessage);
+
 });
 
