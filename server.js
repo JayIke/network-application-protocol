@@ -17,21 +17,24 @@ function broadcastToAllClients(message) {
 const server = net.createServer((socket) => {
   
   socket.on('data', (data) => {
-    //let alt = data;
+    let alt = data;
     //console.log(data.toString());
     
     const { type, sender, message } = ChatRoomProtocol.parseMessage(data.toString());
 
     switch (type) {
       case 'JOIN':
-        socket.username = sender;
+        
 
         //socket.room = roomID;
         clients.add(socket);
         console.log(socket.localAddress);
+        broadcastToAllClients(alt.toString());
+        socket.username = sender;
         const okay = ChatRoomProtocol.createOkayMessage(sender);
-        clients.write(okay);
-        //broadcastToAllClients('JOIN'+ socket.username);
+        
+        socket.write(okay);
+        
         console.log(`@${socket.username} connected.`);
         //socket.write(ChatRoomProtocol.createOkayMessage(`Welcome to the chat, ${socket.username}`));
         console.log('Clients set size: ' + clients.size);
