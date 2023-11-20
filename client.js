@@ -2,6 +2,7 @@ const net = require('net');
 const readline = require('readline');
 const { ChatRoomProtocol } = require('./protocol');
 const os = require('os');
+var me;
 
 // Function to get the local IP address
 function getLocalIpAddress() {
@@ -33,7 +34,6 @@ client.serverAddress = serverAddress;
 
 rl.question('Enter username: ', (username) => {
   
-  console.log('pause input stream');
   client.username = username;
   client.connect(port, ipAddress, () => {
    
@@ -47,27 +47,26 @@ rl.question('Enter username: ', (username) => {
   
 });
 
-
-
 client.on('data', (data) => {
   //console.log(data.toString());
   const { type, sender, message } = ChatRoomProtocol.parseMessage(data.toString());
-
+  
   switch (type) {
     case 'OKAY':
       console.log({ type, sender, message });
       break;
 
     case 'CHAT':
-      console.log({type, sender, message});
+      console.log(`${sender}: ${message}`);
       break;
 
     case 'NOTI':
-      console.log({ type, sender, message });
+      console.log(data.toString());
       break;
 
     case 'EERR':
       console.error(`Error: ${message}`);
+    
       break;
 
     default:
@@ -75,24 +74,37 @@ client.on('data', (data) => {
   }
 });
 
-client.on('end', () => {
+client.on('end', (s) => {
   console.log('Disconnected from server');
+  try{
+    if (!client.isConnected){
+      client.connect(port,ipAddress);
+    }
+  }catch {
+    console.log(s);
   rl.close();
+  }
 });
 
 client.on('error', (err) => {
   const errorMessage = ChatRoomProtocol.createErrorMessage(client.username, err);
   console.error(err);
   client.write(errorMessage);
+  console.log('Connection closed by server...');
+  console.log('Attempting reconnection...');
+  
+  client.connect(port,ipAddress, ()=>{
+    console.log('Reconnection successful!');
+  });
   
   rl.close();
 });
+
 rl.on('line', (input)=>{
   if (input == 'LEAV'){
     const leav = ChatRoomProtocol.createLeaveMessage(client.username);
     client.write(leav);
   } else {
-    console.log('in rl.on line')
     const chat = ChatRoomProtocol.createChatMessage(client.username,input);
     client.write(chat);
   }

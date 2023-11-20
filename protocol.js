@@ -40,12 +40,9 @@ const ChatRoomProtocol = {
       const type = data.substring(0,4); // message type
       const temp = data.substring(5);
       const userIndex = temp.indexOf(' ');
-      const id = temp.substring(0,userIndex);
-      const rawData = data.substring(userIndex-1);
+      let id = temp.substring(0,userIndex);
+      let rawData = temp.substring(userIndex);
      
-      
-      
-  
       let messageType;
       let user;
       let parsedData;

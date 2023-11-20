@@ -5,9 +5,6 @@ from threading import Thread
 import socket
 import os
 
-
-
-
 class ChatroomGUI:
     def __init__(self, master, host, port):
         self.master = master
@@ -100,6 +97,8 @@ class ChatroomGUI:
         #self.active_users.tag_configure('list_tag', foreground='blue', font=('Helvetica', 10, 'bold'))
 
     def close_window(self):
+        leave = 'LEAV'
+        self.client_socket.send(leave.encode('utf-8'))
         self.client_socket.close()
         self.master.destroy()
 
