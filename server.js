@@ -13,6 +13,8 @@ function broadcastToAllClients(message){
 const Client={
   ID: {
   username: new Set(),
+  IP: new Set(),
+  socket: new Set(),
   }
 }
 
@@ -32,8 +34,10 @@ const server = net.createServer((socket) => {
           break;
         } 
         Client.ID.username.add(sender);
+        Client.ID.IP.add(socket.localAddress);
+        Client.ID.socket.add(socket);
         //socket.username = sender;
-        console.log(sender + 'from join');
+        console.log(Client.ID.username);
         clients.add(socket)
         id_list.add(sender);
         console.log('Client IP: ' + socket.localAddress);
@@ -69,11 +73,14 @@ const server = net.createServer((socket) => {
       case 'LEAV':
         console.log(`${type}: ${sender}`);
         if(socket.closed){
-        const noti = ChatRoomProtocol.createNotificationMessage(sender, 'LEFT!');
+        const noti = ChatRoomProtocol.createNotificationMessage(sender, 'left the chat!');
         broadcastToAllClients(noti);
         } else {
           socket.destroy();
-        const noti = ChatRoomProtocol.createNotificationMessage(sender, 'LEFT!');
+          clients.delete(socket);
+          id_list.delete(sender);
+          console.log('connection count: ' + clients.size);
+        const noti = ChatRoomProtocol.createNotificationMessage(sender, 'left the chat!');
         broadcastToAllClients(noti);
         }
         
@@ -84,10 +91,7 @@ const server = net.createServer((socket) => {
         console.log(`Unknown message type: ${type}`);
     }
   });
-  socket.on('connect', (socket) => {
-    const msg = socket.username;
-    console.log(msg + ' connected');
-  });
+ 
 
   socket.on('end', () => {
     //clients.delete(socket);

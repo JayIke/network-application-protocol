@@ -50,14 +50,14 @@ client.on('data', (data) => {
 
   switch (type) {
     case 'OKAY':
-      console.log(data.toString());
+      console.log({ type, sender, message });
 
     case 'CHAT':
-      console.log(data.toString());
+      console.log({ type, sender, message });
       break;
 
     case 'NOTI':
-      console.log(data.toString());
+      console.log({ type, sender, message });
       break;
 
     case 'EERR':
