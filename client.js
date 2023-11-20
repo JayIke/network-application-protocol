@@ -32,10 +32,13 @@ client.port = port;
 client.serverAddress = serverAddress;
 
 rl.question('Enter username: ', (username) => {
+  
+  console.log('pause input stream');
   client.username = username;
   client.connect(port, ipAddress, () => {
    
     console.log('Connected to server on ' + serverAddress);
+    console.log('My address: ' + client.ipAddress);
     const joinMessage = ChatRoomProtocol.createJoinRequest(username);
     client.write(joinMessage);
     console.log('Join message sent.');
@@ -44,6 +47,8 @@ rl.question('Enter username: ', (username) => {
   
 });
 
+
+
 client.on('data', (data) => {
   //console.log(data.toString());
   const { type, sender, message } = ChatRoomProtocol.parseMessage(data.toString());
@@ -51,9 +56,10 @@ client.on('data', (data) => {
   switch (type) {
     case 'OKAY':
       console.log({ type, sender, message });
+      break;
 
     case 'CHAT':
-      console.log({ type, sender, message });
+      console.log({type, sender, message});
       break;
 
     case 'NOTI':
@@ -81,14 +87,16 @@ client.on('error', (err) => {
   
   rl.close();
 });
-
-rl.on('line', (input) => {
+rl.on('line', (input)=>{
   if (input == 'LEAV'){
-    const leavMessage = ChatRoomProtocol.createLeaveMessage(client.username);
-  client.write(leavMessage);
+    const leav = ChatRoomProtocol.createLeaveMessage(client.username);
+    client.write(leav);
+  } else {
+    console.log('in rl.on line')
+    const chat = ChatRoomProtocol.createChatMessage(client.username,input);
+    client.write(chat);
   }
-  const chatMessage = ChatRoomProtocol.createChatMessage(client.username, input);
-  client.write(chatMessage);
-
 });
+
+
 

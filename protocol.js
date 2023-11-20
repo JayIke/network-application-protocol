@@ -20,8 +20,8 @@ const ChatRoomProtocol = {
       return `${this.MessageType.CHAT} ${sender} ${message}`;
     },
 
-    createOkayMessage(message) {
-      return `${this.MessageType.OKAY} ${message}`;
+    createOkayMessage(sender) {
+      return `${this.MessageType.OKAY} ${sender}`;
     },
   
     createNotificationMessage(sender, message) {
@@ -39,14 +39,15 @@ const ChatRoomProtocol = {
     parseMessage(data) {
       const type = data.substring(0,4); // message type
       const temp = data.substring(5);
-      const userIndex = temp.indexOf(' ')
-      const id = temp.substring(5,userIndex);
-      const rawData = data.substring(userIndex+1).trim();
+      const userIndex = temp.indexOf(' ');
+      const id = temp.substring(0,userIndex);
+      const rawData = data.substring(userIndex-1);
+     
+      
       
   
       let messageType;
       let user;
-      //let length = type.length + user.length + rawData.length;
       let parsedData;
       switch (type) {
         case 'JOIN':
@@ -56,41 +57,41 @@ const ChatRoomProtocol = {
           
           break;
 
-        case 'OKAY':
-          messageType = this.MessageType.OKAY;
-          user = id;
-          parsedData = rawData;
+        case this.MessageType.OKAY:
+          messageType = 'OKAY';
+          user = data.substring(5).trim();
+          //parsedData = rawData;
           break;
   
-        case 'CHAT':
-          messageType = this.MessageType.CHAT;
-          user = id;
-          parsedData = rawData;
-          break;
-  
-        case 'NOTI':
-          messageType = this.MessageType.NOTI;
-          user = id;
-          parsedData = rawData;
-          break;
-  
-        case 'EERR':
-          messageType = this.MessageType.EERR;
+        case this.MessageType.CHAT:
+          messageType = 'CHAT';
           
           user = id;
+          parsedData = rawData.trim();
+          break;
+  
+        case this.MessageType.NOTI:
+          messageType = 'NOTI';
+          user = id;
+          parsedData = rawData.trim();
+          break;
+  
+        case this.MessageType.EERR:
+          messageType = 'EERR';
+          user = id;
           parsedData = rawData;
           break;
   
-        case 'LEAV':
-          messageType = this.MessageType.LEAV;
+        case this.MessageType.LEAV:
+          messageType = 'LEAV';
           user = data.substring(5).trim();
           break;
   
         default:
           messageType = 'UNKNOWN';
-          parsedData = data;
+          parsedData = data.trim();
           break;
-      }
+      };
   
       return {
         type: messageType,

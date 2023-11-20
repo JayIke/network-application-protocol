@@ -53,9 +53,9 @@ const server = net.createServer((socket) => {
 
       case 'CHAT':
         console.log('Connection count: ' + clients.size);
-        if (id_list.has(this.sender)){
-          
-          broadcastToAllClients(data.toString());
+        if (Client.ID.username.has(sender)){
+          const chat = ChatRoomProtocol.createChatMessage(sender,message);
+          broadcastToAllClients(chat);
         } else {
           const invalidUsername = ChatRoomProtocol.createErrorMessage('Server', ChatRoomProtocol.ErrorMessage.NOID);
           socket.write(invalidUsername);
@@ -89,21 +89,18 @@ const server = net.createServer((socket) => {
 
       default:
         console.log(`Unknown message type: ${type}`);
-    }
+    };
+    socket.on('end', () => {
+      //clients.delete(socket);
+      //id_list.delete(socket.username);
+      socket.destroy;
+      console.log('Client disconnected');
+    });
+    socket.on('close', () =>{
+      console.log('Client closed');
+    })
   });
- 
-
-  socket.on('end', () => {
-    //clients.delete(socket);
-    //id_list.delete(socket.username);
-    //socket.destroy;
-    console.log('Client disconnected');
   });
-});
- 
-  
-  
-
 
 server.on('error', (err) => {
   const eerr = ChatRoomProtocol.createErrorMessage('Server', err)
@@ -115,8 +112,8 @@ server.on('connect', (socket) =>{
 });
 server.on('connection', (socket) => {
   //clients.add(socket);
-  id_list.add(socket.username);
-  console.log(socket.username);
+  //id_list.add(socket.username);
+  //console.log(socket.username);
   console.log('Client connected to TCP server');
 });
 const PORT = 90;
